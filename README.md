@@ -26,4 +26,4 @@ Al ser un proyecto **HTML-First**, no requiere configuración.
 
 1. Clona este repositorio:
    ```bash
-   git clone [https://github.com/tu-usuario/silicon-path.git](https://github.com/tu-usuario/silicon-path.git)
+   git clone [https://github.com/santiagourdaneta/Chronos-Compute-Zero-Node-HTML-First-Bulma-CSS](https://github.com/santiagourdaneta/Chronos-Compute-Zero-Node-HTML-First-Bulma-CSS)
