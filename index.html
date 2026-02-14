@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Silicon Path | Timeline Explorer</title>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
+        />
+        <style>
+            :root {
+                --bg: #0a0b10;
+                --accent: #00d1b2;
+            }
+
+            body {
+                background-color: var(--bg);
+                color: #f0f0f0;
+                min-height: 100vh;
+            }
+
+            .hero.is-dark {
+                background-color: #1a1c23;
+            }
+
+            /* Estética de Línea de Tiempo Custom */
+            .timeline-container {
+                padding: 2rem;
+                position: relative;
+                max-width: 900px;
+                margin: auto;
+            }
+
+            .timeline-line {
+                position: absolute;
+                left: 50%;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background: #363636;
+                transform: translateX(-50%);
+            }
+
+            @media screen and (max-width: 768px) {
+                .timeline-line {
+                    left: 20px;
+                }
+            }
+
+            .event-card {
+                margin-bottom: 2rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .event-card:hover {
+                transform: translateY(-5px);
+                filter: brightness(1.2);
+            }
+
+            .card {
+                background-color: #1a1c23;
+                color: #fff;
+                border: 1px solid #363636;
+            }
+
+            .card-header-title {
+                color: var(--accent) !important;
+            }
+            .content {
+                color: #ccc;
+            }
+
+            pre {
+                background-color: #000 !important;
+                color: #00ff41 !important;
+                border: 1px solid #00d1b2;
+            }
+
+            .search-box {
+                background: #1a1c23;
+                border: 1px solid #363636;
+                color: #fff;
+            }
+
+            /* Modal Blur */
+            .modal-background {
+                backdrop-filter: blur(5px);
+            }
+        </style>
+    </head>
+    <body>
+        <section class="hero is-dark is-small">
+            <div class="hero-body">
+                <div class="container has-text-centered">
+                    <h1 class="title is-2 has-text-primary">SILICON PATH</h1>
+                    <p class="subtitle is-5">
+                        Historia de la Computación Interactiva
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <nav class="section pb-0">
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-6">
+                        <div class="field">
+                            <div class="control has-icons-left">
+                                <input
+                                    class="input is-primary is-rounded search-box"
+                                    type="text"
+                                    id="search-input"
+                                    placeholder="Buscar hito, año o tecnología..."
+                                    onkeyup="processSearch()"
+                                />
+                                <span class="icon is-left">🔍</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="buttons is-centered mt-4">
+                    <button
+                        class="button is-primary is-outlined is-rounded filter-btn"
+                        onclick="filter('all')"
+                    >
+                        Todos
+                    </button>
+                    <button
+                        class="button is-dark is-rounded filter-btn"
+                        onclick="filter('hw')"
+                    >
+                        Hardware
+                    </button>
+                    <button
+                        class="button is-dark is-rounded filter-btn"
+                        onclick="filter('sw')"
+                    >
+                        Software
+                    </button>
+                    <button
+                        class="button is-dark is-rounded filter-btn"
+                        onclick="filter('net')"
+                    >
+                        Redes
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="timeline-container">
+            <div class="timeline-line"></div>
+            <div id="timeline-content"></div>
+        </div>
+
+        <div class="modal" id="code-modal">
+            <div class="modal-background" onclick="closeModal()"></div>
+            <div class="modal-content">
+                <div class="box has-background-dark">
+                    <h3
+                        class="title is-4 has-text-primary"
+                        id="modal-title"
+                    ></h3>
+                    <p
+                        class="subtitle is-6 has-text-grey-light"
+                        id="modal-desc"
+                    ></p>
+                    <pre><code id="modal-code"></code></pre>
+                    <button
+                        class="button is-primary is-small mt-4"
+                        onclick="closeModal()"
+                    >
+                        Cerrar [ESC]
+                    </button>
+                </div>
+            </div>
+            <button
+                class="modal-close is-large"
+                aria-label="close"
+                onclick="closeModal()"
+            ></button>
+        </div>
+
+        <script>
+            const events = [
+                {
+                    year: "1837",
+                    cat: "sw",
+                    title: "Máquina Analítica",
+                    desc: "Ada Lovelace escribe el primer algoritmo.",
+                    code: "LDA A, DATA\nADD B\nSTA RESULT",
+                },
+                {
+                    year: "1945",
+                    cat: "hw",
+                    title: "ENIAC",
+                    desc: "El gigante de tubos de vacío.",
+                    code: "// Configuración manual mediante interruptores",
+                },
+                {
+                    year: "1972",
+                    cat: "sw",
+                    title: "Lenguaje C",
+                    desc: "El padre de la programación moderna.",
+                    code: '#include <stdio.h>\n\nint main() {\n    printf("Unix is born");\n    return 0;\n}',
+                },
+                {
+                    year: "1983",
+                    cat: "net",
+                    title: "Nacimiento de TCP/IP",
+                    desc: "El protocolo que unió al mundo.",
+                    code: "PACKET_HEADER: 0x4500\nSOURCE: 192.168.1.1\nDEST: 8.8.8.8",
+                },
+                {
+                    year: "1995",
+                    cat: "sw",
+                    title: "JavaScript",
+                    desc: "Brendan Eich crea el lenguaje de la web en 10 días.",
+                    code: "function hello() {\n  console.log('Hello World');\n}",
+                },
+                {
+                    year: "2009",
+                    cat: "net",
+                    title: "Blockchain",
+                    desc: "Protocolo de confianza descentralizada.",
+                    code: "hash = SHA256(prev_hash + data + nonce)",
+                },
+            ];
+
+            let currentFilter = "all";
+            let searchQuery = "";
+
+            function render() {
+                const container = document.getElementById("timeline-content");
+                container.innerHTML = "";
+
+                const filtered = events.filter((e) => {
+                    const matchesFilter =
+                        currentFilter === "all" || e.cat === currentFilter;
+                    const matchesSearch =
+                        e.title.toLowerCase().includes(searchQuery) ||
+                        e.year.includes(searchQuery) ||
+                        e.desc.toLowerCase().includes(searchQuery);
+                    return matchesFilter && matchesSearch;
+                });
+
+                filtered.forEach((e, index) => {
+                    const alignment =
+                        index % 2 === 0 ? "is-pulled-left" : "is-pulled-right";
+                    const card = `
+                    <div class="columns is-mobile is-vcentered event-card" onclick="openModal('${e.title}', '${e.desc}', \`${e.code}\`)">
+                        <div class="column is-5-desktop is-10-mobile ${index % 2 !== 0 && "is-offset-7-desktop"}">
+                            <div class="card">
+                                <header class="card-header">
+                                    <p class="card-header-title">${e.year} - ${e.title}</p>
+                                </header>
+                                <div class="card-content">
+                                    <div class="content">${e.desc}</div>
+                                    <span class="tag is-primary is-light">${e.cat.toUpperCase()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                    container.innerHTML += card;
+                });
+            }
+
+            function filter(cat) {
+                currentFilter = cat;
+                render();
+            }
+
+            function processSearch() {
+                searchQuery = document
+                    .getElementById("search-input")
+                    .value.toLowerCase();
+                render();
+            }
+
+            function openModal(title, desc, code) {
+                document.getElementById("modal-title").innerText = title;
+                document.getElementById("modal-desc").innerText = desc;
+                document.getElementById("modal-code").innerText = code;
+                document
+                    .getElementById("code-modal")
+                    .classList.add("is-active");
+            }
+
+            function closeModal() {
+                document
+                    .getElementById("code-modal")
+                    .classList.remove("is-active");
+            }
+
+            // Cerrar modal con teclado
+            window.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") closeModal();
+            });
+
+            render();
+        </script>
+    </body>
+</html>
